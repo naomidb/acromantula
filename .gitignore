@@ -131,4 +131,4 @@ ENV/
 # End of https://www.gitignore.io/api/macos,python
 
 data_in/
-vivo.db
+*.db

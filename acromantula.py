@@ -73,9 +73,9 @@ def main(args):
     #TODO: add log to keep track of finished files
     files = []
     if args[_folder]:
-        roots, dirs, filenames = os.walk(args[INPUT_PATH])
-        for file in filenames:
-            files.append(os.path.join(args[INPUT_PATH], file))
+        for roots, dirs, filenames in os.walk(args[INPUT_PATH]):
+            for file in filenames:
+                files.append(os.path.join(args[INPUT_PATH], file))
     else:
         files.append(args[INPUT_PATH])
 
@@ -91,14 +91,14 @@ def main(args):
         if args[_wos]:
             handler = wos_handler
             bib_str = ""
-            with open (args[INPUT_PATH], 'r') as bib:
+            with open (file, 'r') as bib:
                 for line in bib:
                     bib_str += line
             bib_data = loads(bib_str)
             dict_data = bib2dict(bib_data)
             pubs, pub_auth, authors = parse_dict(dict_data)
 
-        conn = sqlite3.connect('vivo.db')
+        conn = sqlite3.connect('vivotest.db')
         c = conn.cursor()
         handler.prepare_tables(c)
 
