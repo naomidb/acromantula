@@ -70,11 +70,6 @@ def parse_dict(dict_data):
     return (pubs, pub_auth, authors)
 
 def main(args):
-    #until docopt is fixed
-    # _wos = True  
-    # _vivo = False
-    # _pubmed = False
-
     #TODO: add log to keep track of finished files
     files = []
     if args[_folder]:
@@ -96,7 +91,7 @@ def main(args):
         if args[_wos]:
             handler = wos_handler
             bib_str = ""
-            with open (args[INPUT_FILE], 'r') as bib:
+            with open (args[INPUT_PATH], 'r') as bib:
                 for line in bib:
                     bib_str += line
             bib_data = loads(bib_str)
@@ -113,6 +108,5 @@ def main(args):
         conn.commit()
 
 if __name__ == '__main__':
-    # main(sys.argv[1])
     args = docopt(docstr)
     main(args)
