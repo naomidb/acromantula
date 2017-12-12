@@ -1,6 +1,8 @@
+import sqlite3
+
 def prepare_tables(c):
     c.execute('''create table if not exists wos_pubs
-                    ("doi" text primary key, "issn" text, "title" text, "year" text)''')
+                    ("doi" text primary key, "issn" text, "title" text, "year" text, "type" text)''')
 
     c.execute('''create table if not exists wos_authors
                     (author text unique)''')
@@ -11,7 +13,7 @@ def prepare_tables(c):
 def add_pubs(c, pubs):
     for pub in pubs:
         try:
-            c.execute('INSERT INTO wos_pubs VALUES (?, ?, ?, ?)', pub)
+            c.execute('INSERT INTO wos_pubs VALUES (?, ?, ?, ?, ?)', pub)
         except sqlite3.IntegrityError as e:
             pass
 

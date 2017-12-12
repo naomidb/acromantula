@@ -1,33 +1,38 @@
-# docstr = """
-# Acromantula
-# Usage:
-#     acromantula (-h | --help)
-#     acromantula.py -w <input_file>
-#     acromantula.py -p <input_file>
-#     acromantula.py -v <input_file>
-# Options:
-#   -h --help             Show this message and exit
-#   -w --wos              Input file is bibtex from Web of Science site
-#   -p --pubmed           Input file is __ from pubmed
-#   -v --vivo             Input file is csv from Vivo
-# """
+docstr = """
+Acromanutla
+Usage:
+    acromantula.py (-h | --help)
+    acromantula.py [-wd] (<input_path>)
+    acromantula.py [-pd] (<input_path>)
+    acromantula.py [-vd] (<input_path>)
+
+
+Options:
+  -h --help                     Show this message and exit
+  -w --wos                      Input file is bibtex from Web of Science site
+  -p --pubmed                   Input file is __ from pubmed
+  -v --vivo                     Input file is csv from vivo
+  -d --directory                Input is a directory of files
+
+"""
+
 
 #TODO: add config or argument for where to save database
-#TODO: Figure out why docopt won't work
 
 from bibtexparser import loads
 import csv
-# from docopt import docopt
+from docopt import docopt
 import os
 import sqlite3
 import sys
 
 import wos_handler
 
-# INPUT_FILE = '<input_file>'
-# _vivo = '--vivo'
-# _pubmed = '--pubmed'
-# _wos = '--wos'
+INPUT_PATH = '<input_path>'
+_vivo = '--vivo'
+_pubmed = '--pubmed'
+_wos = '--wos'
+_folder = '--directory'
 
 def bib2dict(bib_data):
     dict_data = {}
@@ -56,7 +61,7 @@ def parse_dict(dict_data):
         author_str = data['author']
         people = author_str.split(" and ")
 
-        pubs.append((data['doi'], data['issn'], data['title'], data['year']))
+        pubs.append((data['doi'], data['issn'], data['title'], data['year'], data['type']))
         pub_auth[data['doi']] = people
         for author in people:
             if author not in authors:
@@ -66,37 +71,48 @@ def parse_dict(dict_data):
 
 def main(args):
     #until docopt is fixed
-    _wos = True  
-    _vivo = False
-    _pubmed = False 
-    if _vivo:
-        #stuff
-        pass
+    # _wos = True  
+    # _vivo = False
+    # _pubmed = False
 
-    if _pubmed:
-        #stuff
-        pass
+    #TODO: add log to keep track of finished files
+    files = []
+    if args[_folder]:
+        roots, dirs, filenames = os.walk(args[INPUT_PATH])
+        for file in filenames:
+            files.append(os.path.join(args[INPUT_PATH], file))
+    else:
+        files.append(args[INPUT_PATH])
 
-    if _wos:
-        handler = wos_handler
-        bib_str = ""
-        with open (args, 'r') as bib:
-            for line in bib:
-                bib_str += line
-        bib_data = loads(bib_str)
-        dict_data = bib2dict(bib_data)
-        pubs, pub_auth, authors = parse_dict(dict_data)
+    for file in files:
+        if args[_vivo]:
+            #stuff
+            pass
 
-    conn = sqlite3.connect('vivo.db')
-    c = conn.cursor()
-    handler.prepare_tables(c)
+        if args[_pubmed]:
+            #stuff
+            pass
 
-    handler.add_pubs(c, pubs)
-    handler.add_authors(c, authors)
-    handler.add_pub_auth(c, pub_auth)
-    conn.commit()
+        if args[_wos]:
+            handler = wos_handler
+            bib_str = ""
+            with open (args[INPUT_FILE], 'r') as bib:
+                for line in bib:
+                    bib_str += line
+            bib_data = loads(bib_str)
+            dict_data = bib2dict(bib_data)
+            pubs, pub_auth, authors = parse_dict(dict_data)
+
+        conn = sqlite3.connect('vivo.db')
+        c = conn.cursor()
+        handler.prepare_tables(c)
+
+        handler.add_pubs(c, pubs)
+        handler.add_authors(c, authors)
+        handler.add_pub_auth(c, pub_auth)
+        conn.commit()
 
 if __name__ == '__main__':
-    main(sys.argv[1])
-    # args = docopt(docstr)
-    # main(args)
+    # main(sys.argv[1])
+    args = docopt(docstr)
+    main(args)
