@@ -2,7 +2,7 @@ import sqlite3
 
 def prepare_tables(c):
     c.execute('''create table if not exists wos_pubs
-                    ("doi" text primary key, "issn" text, "title" text, "year" text, "type" text)''')
+                    ("doi" text, "issn" text, "title" text, "year" text, "type" text)''')
 
     c.execute('''create table if not exists wos_authors
                     (author text unique)''')

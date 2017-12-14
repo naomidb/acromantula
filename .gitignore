@@ -132,3 +132,4 @@ ENV/
 
 data_in/
 *.db
+wos_config.yaml
