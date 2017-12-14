@@ -1,4 +1,46 @@
-import sqlite3
+import csv
+import sqlite3 #probably don't need this?
+
+class Foo(object):
+    def __init__(self, data):
+        self.data = data
+
+    def __getitem__(self, key):
+        try:
+            self.data[key] = self.data[key].replace('\xc2\x80\xc2\x93', '')
+            self.data[key] = self.data[key].replace("\xc3\xa2\xc2\x80\xc2\x98", "'")
+            self.data[key] = self.data[key].replace("\xc3\xa2\xc2\x80\xc2\x99", "'")
+            self.data[key] = self.data[key].replace('\xc3\x83\xc2\xaf', 'i')
+            self.data[key] = self.data[key].replace('\xc2\xa0', ' ')
+            self.data[key] = self.data[key].replace('\xc2\xae', '')
+            self.data[key] = self.data[key].replace('\xc3\xa2', '-')
+            self.data[key] = self.data[key].replace('\xe2\x80\x93', '-')
+            self.data[key] = self.data[key].replace('\xc3\x83\xc2\x83\xc3\x82\xc2\xb1', 'n')
+            return self.data[key].encode('utf-8')
+        except UnicodeDecodeError as e:
+            import pdb
+            pdb.set_trace()
+
+def prep_vivo(csv_data):
+    pubs = []
+    pub_auth = {}
+    authors = {}
+    with open(csv_data, 'r') as table:
+        # text = table.read().encode('utf-8')
+        reader = csv.DictReader(table)
+        for row in reader:
+            row = Foo(row)
+            pubs.append((row['nnum'], row['jname'], row['title'], row['year'], row['type']))
+
+            if row['nnum'] not in pub_auth.keys():
+                pub_auth[row['nnum']] = [row['author']]
+            else:
+                pub_auth[row['nnum']].append(row['author'])
+            
+            if row['author'] not in authors.keys():
+                authors[row['author']] = row ['authname']
+
+    return (pubs, pub_auth, authors)
 
 def prepare_tables(c):
     c.execute('''create table if not exists vivo_pubs
