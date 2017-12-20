@@ -118,36 +118,54 @@ def prep_wos_api(results):
 def prepare_tables(c):
     print("Make tables")
     c.execute('''create table if not exists wos_pubs
-                    (doi text, title text, year text, volume text, issue text, pages text, type text, wosid text unique, created_dt text, modified_dt text, modified_by text)''')
+                    (doi text, title text, year text, volume text, issue text, pages text, type text, wosid text unique, created_dt text not null, modified_dt text not null, written_by text not null)''')
 
     c.execute('''create table if not exists wos_authors
-                    (author text unique, created_dt text, modified_dt text, modified_by text)''')
+                    (author text unique)''')
 
     c.execute('''create table if not exists wos_journals
-                    (issn text unique, title text, created_dt text, modified_dt text, modified_by text)''')
+                    (issn text unique, title text, created_dt text not null, modified_dt text not null, written_by text not null)''')
 
     c.execute('''create table if not exists wos_pub_auth
-                    (wosid text, auth text, created_dt text, modified_dt text, modified_by text, unique (wosid, auth))''')
+                    (wosid text, auth text, unique (wosid, auth))''')
 
     c.execute('''create table if not exists wos_pub_journ
-                    (wosid text, issn text, created_dt text, modified_dt text, modified_by text, unique (wosid, issn))''')
+                    (wosid text, issn text, unique (wosid, issn))''')
 
 def add_pubs(c, pubs, source):
     print("Adding publications")
     timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
     for pub in pubs:
-        try:
+        wosid = pub[7]
+        c.execute('SELECT * FROM wos_pubs WHERE wosid=?', (wosid,))
+        rows = c.fetchall()
+
+        if len(rows)==0:
             dataset = pub + (timestamp, timestamp, source)
             c.execute('INSERT INTO wos_pubs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (dataset))
-        except sqlite3.IntegrityError as e:
-            pass
+        else:
+            for row in rows:
+                if row[0:8] != pub:
+                    with open('log.txt', 'a+') as log:
+                        log.write(timestamp + '\n' + str(row))
+                    sql = '''UPDATE wos_pubs
+                             SET doi = ? ,
+                                 title = ? ,
+                                 year = ? ,
+                                 volume = ? ,
+                                 issue = ? ,
+                                 pages = ? ,
+                                 type = ? ,
+                                 modified_dt = ? ,
+                                 written_by = ?
+                             WHERE wosid = ?'''
+                    c.execute(sql, (pub[0:7], timestamp, source, wosid))
 
-def add_authors(c, authors, source):
+def add_authors(c, authors):
     print("Adding authors")
-    timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
     for auth in authors:
         try:
-            c.execute('INSERT INTO wos_authors VALUES(?, ?, ?, ?)', (auth, timestamp, timestamp, source))
+            c.execute('INSERT INTO wos_authors VALUES(?)', (auth,))
         except sqlite3.IntegrityError as e:
             pass
 
@@ -155,26 +173,36 @@ def add_journals(c, journals, source):
     print("Adding journals")
     timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
     for issn, title in journals.items():
-        try:
-            c.execute('INSERT INTO wos_journals VALUES (?, ?, ?, ?, ?)', (issn, title, timestamp, timestamp, source))
-        except sqlite3.IntegrityError as e:
-            pass
+        c.execute('SELECT * FROM wos_journals WHERE issn=?', (issn,))
+        rows = c.fetchall()
 
-def add_pub_auth(c, pub_auth, source):
-    print("Add publication-author linkages")
-    timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        if len(rows)==0:
+            c.execute('INSERT INTO wos_journals VALUES (?, ?, ?, ?, ?)', (issn, title, timestamp, timestamp, source))
+        else:
+            for row in rows:
+                if row[0:2] != (issn, title):
+                    with open('log.txt', 'a+') as log:
+                        log.write(timestamp + '\n' + str(row))
+                    sql = '''UPDATE wos_journals
+                             SET title = ? ,
+                                 modified_dt = ? ,
+                                 written_by = ?
+                             WHERE issn = ?'''
+                    c.execute(sql, (title, timestamp, source, issn))
+
+def add_pub_auth(c, pub_auth):
+    print("Adding publication-author linkages")
     for wosid, auth_list in pub_auth.items():
         for auth in auth_list:
             try:
-                c.execute('INSERT INTO wos_pub_auth VALUES(?, ?, ?, ?, ?)', (wosid, auth, timestamp, timestamp, source))
+                c.execute('INSERT INTO wos_pub_auth VALUES(?, ?)', (wosid, auth))
             except sqlite3.IntegrityError as e:
                 pass
 
-def add_pub_journ(c, pub_journ, source):
+def add_pub_journ(c, pub_journ):
     print("Adding publication-journal linkages")
-    timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
     for wosid, issn in pub_journ.items():
         try:
-            c.execute('INSERT INTO wos_pub_journ VALUES(?, ?, ?, ?, ?)', (wosid, issn, timestamp, timestamp, source))
+            c.execute('INSERT INTO wos_pub_journ VALUES(?, ?)', (wosid, issn))
         except sqlite3.IntegrityError as e:
             pass

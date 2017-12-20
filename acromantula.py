@@ -48,7 +48,7 @@ def insert(handler, pubs, authors, pub_auth, journals, pub_journ):
 
     handler.add_pubs(c, pubs, 'acromantula')
     handler.add_authors(c, authors)
-    handler.add_pub_auth(c, pub_auth, 'acromantula')
+    handler.add_pub_auth(c, pub_auth)
     conn.commit()
 
 def main(args):
@@ -65,7 +65,7 @@ def main(args):
         if args[_wos]:
             handler = wos_handler
             try:
-                with open('wos/wos_config.yaml', 'r') as config_file:
+                with open('api_config.yaml', 'r') as config_file:
                     config = yaml.load(config_file.read())
             except Exception, e:
                 print("Error: Check config file")

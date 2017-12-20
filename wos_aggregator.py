@@ -6,7 +6,7 @@ import wos_handler
 
 def get_credentials():
     try:
-        with open('wos/wos_config.yaml', 'r') as config_file:
+        with open('api_config.yaml', 'r') as config_file:
             config = yaml.load(config_file.read())
     except Exception, e:
         print("Error: Check config file")
@@ -24,8 +24,8 @@ def insert(pubs, pub_auth, authors, journals, pub_journ):
     wos_handler.add_pubs(c, pubs, 'wos_aggregator')
     wos_handler.add_authors(c, authors)
     wos_handler.add_journals(c, journals, 'wos_aggregator')
-    wos_handler.add_pub_auth(c, pub_auth, 'wos_aggregator')
-    wos_handler.add_pub_journ(c, pub_journ, 'wos_aggregator')
+    wos_handler.add_pub_auth(c, pub_auth)
+    wos_handler.add_pub_journ(c, pub_journ)
     conn.commit()
 
 def main():
@@ -41,7 +41,7 @@ def main():
         records = []
         for child in root.iter('records'):
             wosid = child.find('uid').text[4:]
-            filename = 'data/wos_data/' + wosid + '.xml'
+            filename = 'wos/wos_data/' + wosid + '.xml'
             branch = ET.tostring(child, encoding='utf-8', method='xml')
             sapling = branch.replace('>', '>\n')
             with open(filename, 'w') as output:

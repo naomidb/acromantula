@@ -132,4 +132,5 @@ ENV/
 
 data_in/
 *.db
-wos_config.yaml
+wos_data/
+api_config.yaml

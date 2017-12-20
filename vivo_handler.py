@@ -1,5 +1,5 @@
 import csv
-import sqlite3 #probably don't need this?
+import sqlite3
 
 class Foo(object):
     def __init__(self, data):

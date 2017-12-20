@@ -1,0 +1,6 @@
+b64_credentials: '"Username:Password" encoded in base 64'
+
+vivo_email: 'username@school.edu'
+vivo_password: 'MyPassword'
+
+vivo_endpoint: 'http://school.edu/vivo/api/sparqlQuery'
