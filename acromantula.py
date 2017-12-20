@@ -41,17 +41,18 @@ _wos = '--wos'
 _api = '--api'
 _folder = '--directory'         
 
-def insert(handler, pubs, authors, pub_auth):
-    conn = sqlite3.connect('vivo.db')
+def insert(handler, pubs, authors, pub_auth, journals, pub_journ):
+    conn = sqlite3.connect('testing.db')
     c = conn.cursor()
     handler.prepare_tables(c)
 
-    handler.add_pubs(c, pubs)
+    handler.add_pubs(c, pubs, 'acromantula')
     handler.add_authors(c, authors)
-    handler.add_pub_auth(c, pub_auth)
+    handler.add_pub_auth(c, pub_auth, 'acromantula')
     conn.commit()
 
 def main(args):
+    #Using api
     if args[_api]:
         if args[_vivo]:
             handler = vivo_handler
@@ -72,10 +73,15 @@ def main(args):
                 exit()
 
             credentials = config.get('b64_credentials')
-            pubs, authors, pub_auth = handler.prep_wos_api(credentials)
+            query = raw_input('Enter query: ')
+            start = raw_input('Enter start date: ')
+            end = raw_input('Enter end date: ')
+            results = handler.get_data(credentials, query, start, end)
+            pubs, authors, pub_auth, journals, pub_journ = handler.prep_wos_api(results)
         
-        insert(handler, pubs, authors, pub_auth)
+        insert(handler, pubs, authors, pub_auth, journals, pub_jour)
 
+    #Using input files
     else:
         #TODO: add log to keep track of finished files
         files = []
